@@ -1,119 +1,141 @@
 # Manual test pass
 
-The packages are covered by 96 automated tests; everything below the app
-layer is verified on every commit. What no test touches is the SwiftUI
-editor, the widget extension on a real device, and the App Group handoff
-between them — so those get tested by hand.
+383 package tests cover the model, resolver, and both render backends, and
+`FacetAppTests` covers `App/Shared`. What no test touches is the SwiftUI
+editor under a finger, the widget extension on a real device, and the App
+Group handoff between them. Those get tested by hand.
 
-Run on device where noted (the simulator lies about battery and widget
-refresh behavior). Log failures inline as `FAIL:` notes and commit them —
-that's how they reach me.
+Run on device where marked 📱 — the simulator lies about battery, permission
+prompts, and widget refresh. Record failures as `FAIL:` lines with the test
+number and expected-vs-actual, then commit; that is how they reach a session
+that can fix them.
+
+Headless shortcuts for setup: `xcrun simctl launch booted com.JasonPhillips.app
+-facet-show-sources` (also `-facet-open-editor`, `-facet-open-scene`).
 
 ---
 
-## A. Gallery
+## A. Gallery & documents
 
 | # | Step | Expected |
 |---|---|---|
-| A1 | Launch a fresh install (delete the app first) | Gallery seeds with 12 starter templates |
-| A2 | Inspect each preview tile | Every one renders; no magenta fills (missing token), no ⚠︎ (broken binding) |
-| A3 | Pull to refresh | No hang; battery-driven templates show current level |
-| A4 | Tap **+** | New "Untitled" document appears and opens |
-| A5 | Long-press a tile → Rename | Alert accepts text; name updates in the grid |
-| A6 | Long-press → Duplicate | Copy appears named "… Copy", independent of the original |
-| A7 | Long-press → Share .facet | Share sheet offers a `.facet` file; save it to Files |
-| A8 | Toolbar import → pick that file | Imports as a separate document, does not overwrite the original |
-| A9 | Long-press → Show in Widget | Checkmark moves to that tile |
-| A10 | Long-press → Delete | Tile disappears; survives an app relaunch |
+| A1 | Fresh install (delete first), launch | Seeds the starter templates; no empty state |
+| A2 | Inspect every preview tile | All render; no magenta (missing token), no ⚠︎ (broken binding) |
+| A3 | New document | Opens in the editor, renders something sane |
+| A4 | Rename / duplicate / delete | Each persists across a relaunch |
+| A5 | Export `.facet`, then import it back | Imports as a separate document; original untouched |
+| A6 | Import a corrupted `.facet` (flip a byte) | Clear error alert, no crash |
+| A7 | Assign a document to a widget slot | Selection sticks |
 
-## B. Editor — selection & geometry
+## B. Canvas manipulation
 
 | # | Step | Expected |
 |---|---|---|
-| B1 | Open "Battery Ring", tap the percentage text | Selection border + 8 handles appear around it |
-| B2 | Drag it around | Moves under the finger, 1:1 with the gesture |
-| B3 | Drag toward the horizontal centre | Snaps at centre; accent guide line appears |
-| B4 | Drag a corner handle outward | Grows on both axes |
-| B5 | Drag an edge handle | Grows on one axis only |
-| B6 | Drag any handle far past the canvas | Clamps, never inverts or disappears |
-| B7 | Tap empty canvas | Deselects |
-| B8 | Undo repeatedly | Steps back through edits; grouped by ~1s, not one step per pixel |
+| B1 | Tap a layer | Selection border + handles |
+| B2 | Drag | Tracks the finger 1:1 |
+| B3 | Drag toward centre / quarters | Snaps with a visible guide |
+| B4 | Corner handle / edge handle | Both axes / one axis |
+| B5 | Drag a handle far past the canvas | Clamps; never inverts |
+| B6 | Numeric position/size entry | Matches what dragging produces |
+| B7 | Alignment actions | Layers align as labelled |
+| B8 | Undo repeatedly | Steps back sanely; grouped, not per-pixel |
+| B9 | Rapid undo during a drag | No corrupted layout, no crash |
 
-## C. Editor — layers & inspector
-
-| # | Step | Expected |
-|---|---|---|
-| C1 | Open the layer panel | Tree matches the canvas, front-most listed first |
-| C2 | Tap a row | Selects that layer on the canvas |
-| C3 | Swipe a row → Hide | Layer disappears from canvas; row shows the eye-slash |
-| C4 | Context menu → Bring Forward / Send Backward | Draw order visibly changes |
-| C5 | Context menu → Duplicate | Copy offset slightly, independently selectable |
-| C6 | Swipe → Delete | Removed; undo restores it |
-| C7 | Add each of the 8 layer types | Each appears centred and renders correctly |
-| C8 | Inspector → edit a text template to `{percent(battery.level)}` | Canvas updates on submit |
-| C9 | Enter a deliberately broken template, e.g. `{foo(` | Orange warning; canvas does **not** change |
-| C10 | Inspector → font size / weight / design | Each visibly changes the text |
-| C11 | Inspector → tracking, case | Letter spacing widens; case transforms |
-| C12 | Shape layer → Fill → Linear, set two colors + angle | Gradient renders, angle slider rotates it |
-| C13 | Gauge → change expression to `0.25` | Ring/bar jumps to a quarter |
-| C14 | Chart → data path `weather.hourly`, style Area | Area chart renders |
-| C15 | Chart → nonsense path | Chart empties; app does not crash |
-| C16 | Toggle shadow, adjust radius | Shadow appears and softens |
-| C17 | Rotation slider | Rotates about the layer centre |
-
-## D. Theme tokens
+## C. Inspector — per layer type
 
 | # | Step | Expected |
 |---|---|---|
-| D1 | Theme editor → change a color token's light value | Every layer using it updates at once |
-| D2 | Switch canvas to Dark | Dark values take over |
-| D3 | Change a font token's size | All text bound to that token resizes |
-| D4 | Delete a token still in use | Affected layers render magenta (intentional — no silent fallback) |
-| D5 | Add a token | Appears in the swatch row of every color picker |
+| C1 | Add each layer type from the palette | Each appears and renders |
+| C2 | Text: template `{percent(battery.level)}` | Updates on submit |
+| C3 | Text: deliberately broken template | Warning shown; canvas unchanged |
+| C4 | Text: size, weight, design, tracking, case | Each visibly changes |
+| C5 | Text: custom font from the picker | Applies, and survives reopening |
+| C6 | Text/symbol: gradient fill | Ramp resolves across the glyphs, not the layer box |
+| C7 | Shape: kind, fill, stroke | |
+| C8 | Shape studio: blob sliders, then a path shape | Silhouette matches the preview |
+| C9 | Gauge: partial arc, start angle, direction, caps, segments | Each parameter behaves as named |
+| C10 | Chart: `weather.hourly`, each style | Line/area/bars all render |
+| C11 | Chart: nonsense data path | Empties gracefully; no crash |
+| C12 | Corners: per-corner radii, unlink, corner style | Squircle differs visibly from a plain radius |
+| C13 | Shadows: add several; flip one to inset | Neumorphism preset reads correctly on a same-colour background |
+| C14 | Glow, blur, border, colour adjust, blend mode | Each applies; order matches the SVG preview |
+| C15 | Mask: shape, alpha ramp, invert | Cut edge blurs with the layer, not before it |
+| C16 | Image layer: pick a photo | Imports, downsamples, renders |
+| C17 | Tap action with an expression URL | Saves; validated |
+| C18 | `visibleWhen` condition true/false | Layer appears/disappears |
+| C19 | `visibleWhen` with a broken expression | Layer stays visible (fails open) |
 
-## E. Renditions & overrides
-
-| # | Step | Expected |
-|---|---|---|
-| E1 | Switch to Medium | Canvas resizes; layout adapts by proportion |
-| E2 | Switch to Lock ◯ | Renders monochrome/vibrant |
-| E3 | In Medium, drag a layer | "override" badge appears on the selection |
-| E4 | Return to Small | Base layout unchanged by the Medium edit |
-| E5 | Back to Medium, inspector → Clear override | Reverts to the base position; badge clears |
-
-## F. Persistence & widget (device only)
-
-| # | Step | Expected |
-|---|---|---|
-| F1 | Edit, Save, reopen the document | Changes persisted |
-| F2 | Force-quit and relaunch | Still persisted |
-| F3 | Home screen → add a Facet widget (small) | Renders the selected document, not a placeholder |
-| F4 | Change the selected document in-app | Widget updates within a few seconds |
-| F5 | Edit a layer, Save | Widget reflects the edit |
-| F6 | Add medium + large widgets | Each uses its rendition's layout |
-| F7 | Lock Screen → add circular + rectangular | Render monochrome, legible |
-| F8 | Watch a clock template for 2–3 minutes | Minute ticks over without opening the app |
-| F9 | Plug in / unplug the phone | Battery templates reflect it within ~15 min |
-| F10 | Leave widgets overnight | Still populated in the morning — no blank/stale widgets |
-
-## G. Robustness
+## D. Theme & palette
 
 | # | Step | Expected |
 |---|---|---|
-| G1 | Import a malformed `.facet` (edit a byte in a text editor) | Clear "not a valid .facet" alert; no crash |
-| G2 | Delete the document the widget is showing | Widget falls back gracefully |
-| G3 | Airplane mode → add a widget | Renders from cache |
-| G4 | Rotate device, use Dynamic Type at a large setting | Editor chrome stays usable |
-| G5 | Rapid undo spam mid-drag | No corrupted layout, no crash |
+| D1 | Change a colour token's light value | Every layer using it updates at once |
+| D2 | Switch canvas to dark | Dark values take over |
+| D3 | Delete a token still in use | Affected layers go magenta (intentional, no silent fallback) |
+| D4 | Apply a scene palette to a widget | Token colours recolour; **literal** colours do not |
+
+## E. Renditions
+
+| # | Step | Expected |
+|---|---|---|
+| E1 | Cycle every rendition | Canvas resizes; layout adapts |
+| E2 | Accessory sizes | Monochrome, legible |
+| E3 | Move a layer in a non-base rendition | Override badge appears |
+| E4 | Return to systemSmall | Base layout unchanged |
+| E5 | Clear override | Reverts; badge clears |
+
+## F. Scenes
+
+| # | Step | Expected |
+|---|---|---|
+| F1 | Create a scene, import a wallpaper | Backdrop shows behind the canvas |
+| F2 | Place widgets into real grid slots | Positions match the home-screen preview |
+| F3 | Add launcher tiles from the app picker | Tiles render, theme with the palette |
+| F4 | Edit a widget referenced by the scene | Scene reflects it — reference, not copy |
+| F5 | Delete a widget the scene references | Scene degrades gracefully |
+| F6 | Export a scene bundle, import on a clean install | Wallpaper, widgets, assets, palette all restored; ids remapped without collision |
+
+## G. Data sources
+
+| # | Step | Expected |
+|---|---|---|
+| G1 | 📱 Grant Health permission | Steps populate; denial leaves a sane fallback |
+| G2 | 📱 Grant Calendar / Reminders | Next event and counts populate |
+| G3 | 📱 Weather with units toggled | Values convert; symbols match conditions |
+| G4 | 📱 Focus on/off | Boolean flips (name is unavailable by API — expected) |
+| G5 | Custom source: add a public JSON API | Discovered paths listed; values bind in a text layer |
+| G6 | Custom source: bad URL / 500 / oversized body | Clear error; last good snapshot retained |
+| G7 | Astronomy for your location | Sunrise/sunset within a few minutes of reality |
+
+## H. AI generation
+
+| # | Step | Expected |
+|---|---|---|
+| H1 | Generate from a plain prompt | Produces an **editable** layer tree, not an image |
+| H2 | Inspect the result's layers | Sensible names, tokens used, no orphan literals everywhere |
+| H3 | Generate something deliberately absurd | Fails gracefully, no crash or empty document |
+
+## I. 📱 Widget extension (device only)
+
+| # | Step | Expected |
+|---|---|---|
+| I1 | Add small / medium / large widgets | Each renders its rendition's layout |
+| I2 | Two widgets bound to different documents | Each shows its own |
+| I3 | Edit and save in-app | Widget reflects the change within seconds |
+| I4 | Lock Screen circular + rectangular | Monochrome, legible |
+| I5 | Watch a clock template 2–3 minutes | Ticks without opening the app |
+| I6 | Tap a layer with a tap action | Deep link fires (medium/large per-layer; small uses the first action) |
+| I7 | Plug/unplug | Battery designs update within ~15 min |
+| I8 | Airplane mode, then add a widget | Renders from cache |
+| I9 | Leave overnight | Still populated in the morning — no blank or stale widgets |
+| I10 | Photo-heavy design in the extension | No memory-limit crash (budget ~30 MB) |
 
 ---
 
 ## Results
 
-Record per pass: date, iOS version, device, and any `FAIL:` lines with the
-test number. Failures with a test number and expected-vs-actual are directly
-actionable; "it looked weird" is not.
+### Pass 1 — (date · device · iOS)
 
-### Pass 1 — (date, device, iOS)
+- [ ] A · [ ] B · [ ] C · [ ] D · [ ] E · [ ] F · [ ] G · [ ] H · [ ] I
 
-- [ ] A · [ ] B · [ ] C · [ ] D · [ ] E · [ ] F · [ ] G
+`FAIL:` notes here.

@@ -1,232 +1,195 @@
-# Widgy parity checklist
+# Capability audit vs Widgy
 
-A working inventory of the capability surface Widgy exposed, mapped against
-what Facet has today. Widgy shipped no documentation, so this list is
-reconstructed from its editor UI; treat unverified rows as claims to confirm
-against the app bundle (see "Verifying this list" at the bottom).
+Written 2026-08-12, after Widgy's withdrawal (unmaintained, repo gone, the
+developer citing a cease and desist without elaborating).
 
-**Legend**
+This is a *gap list*, not a plan. `ROADMAP_V2.md` holds the plan, and it
+deliberately rejects parity-as-strategy: Scenes are the thesis, and matching
+Widgy feature-for-feature is not the goal. What this file is good for is
+answering two narrower questions — **what could someone do in Widgy that they
+cannot do in Facet today**, and **which Widgy controls do we not yet
+understand well enough to judge**.
 
-| Mark | Meaning |
-|---|---|
-| ✅ | Implemented in Facet |
-| 🟡 | Partially implemented — see note |
-| ⬜ | Not implemented |
-| ❓ | Exists in Widgy, purpose unclear — research before deciding |
+**Legend:** ✅ implemented · 🟡 partial · ⬜ absent · ❓ unidentified Widgy
+control · 🚫 blocked by the platform, documented in ROADMAP_V2
 
-Scope note: this is a *capability* checklist. We match features, never
-Widgy's code, assets, or file format. The importer (below) reads their
-export format for user migration only.
+Scope: capabilities only. We match what an app can *do*; we never copy code,
+assets, or trade dress. The importer reads their export format so users can
+migrate their own work — that is its entire purpose.
 
 ---
 
 ## 1. Layer types
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Text | Template strings with embedded expressions |
-| ✅ | Shape — rectangle / circle / capsule | |
-| ✅ | SF Symbol | |
-| ✅ | Line / divider | Dash patterns supported |
-| ✅ | Progress gauge — ring | |
-| ✅ | Progress gauge — bar | |
-| ✅ | Chart — line / area / bars | Over any list-valued data path |
-| ✅ | Group / container | absolute, row, column, overlay |
-| 🟡 | Image | Model + renderer exist; no photo picker or asset bundle yet |
-| ⬜ | Blur / backdrop layer | Frosted panels — very common in Widgy designs |
-| ⬜ | Mask / clipping layer | Shape-masked images, text knockouts |
-| ⬜ | App launcher grid | Tappable icon rows linking to apps |
-| ⬜ | Calendar agenda list | Repeating rows bound to a list of events |
-| ⬜ | Weather forecast row | Repeating rows (needs a repeater primitive) |
-| ⬜ | **Repeater / list layer** | The general primitive the two rows above need |
-| ⬜ | Web / HTML layer | Widgy had one; likely not worth the memory in an extension |
+| ✅ | Text, symbol, shape, image, gauge, line, chart, container | |
+| ✅ | Arbitrary path shapes | SVG-subset parser, node editing, shape studio |
+| ✅ | Procedural blob generator | Seeded, slider-driven |
+| ✅ | Launcher tiles | Composed from ordinary layers, so they theme for free |
+| ✅ | User photos | Content-addressed, downsampled, travels with the document |
+| ⬜ | **Repeater / list layer** | The missing primitive behind agenda lists and forecast rows — the one structural layer gap |
+| ⬜ | Web / HTML layer | Widgy had one; hard to justify inside a 30 MB extension |
 
-## 2. Geometry & transform
+## 2. Geometry
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Position (normalized X/Y, center anchor) | |
-| ✅ | Size (normalized W/H) | |
-| ✅ | Rotation | |
-| ✅ | Z-order | Reorder in layer list |
-| ✅ | Padding (containers) | |
-| ✅ | Stack spacing + cross-axis alignment | |
-| ⬜ | Numeric entry for position/size | Inspector is sliders/gestures only — precision editing missing |
-| ⬜ | Anchor point selection | Everything anchors center; Widgy allows corner/edge anchors |
+| ✅ | Normalized position/size, rotation, z-order, padding, stack spacing + alignment | |
+| ✅ | Numeric entry for position and size | |
+| ✅ | Align / distribute actions | |
+| ✅ | Per-rendition overrides | Edit once, tune per surface |
+| ⬜ | Multi-select | Blocks bulk transforms and group/ungroup |
+| ⬜ | Anchor-point selection | Everything anchors center |
 | ⬜ | Aspect-ratio lock | |
-| ⬜ | Align / distribute tools | Align selected layers left/center/right, even spacing |
-| ⬜ | Multi-select | Blocks align/distribute and group operations |
-| ⬜ | Clip subviews to bounds | Per-container toggle |
-| ❓ | "Fit" / auto-size modes | Widgy has several sizing modes whose behavior is undocumented |
+| ⬜ | Clip-subviews toggle on containers | Masks cover most of this today |
 
 ## 3. Appearance & effects
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Opacity | |
-| ✅ | Corner radius | |
-| ✅ | Drop shadow (color, radius, offset) | |
-| ✅ | Stroke / border (shapes) | |
-| ✅ | Solid fill | |
-| ✅ | Linear gradient | Editor UI edits 2 stops + angle; model supports N stops |
-| ✅ | Radial gradient | |
+| ✅ | Corner profiles | Per-corner radii + corner styles (squircle etc.) |
+| ✅ | Shadow list, each with inset | Neumorphism/emboss presets ride on this |
+| ✅ | Glow, blur, border, color adjust | Fixed effect order, matched across both backends |
+| ✅ | Blend modes | |
+| ✅ | Masks | Shape + alpha ramp + invert |
+| ✅ | Linear / radial gradients, incl. on text and symbols | |
 | ⬜ | Angular / conic gradient | |
-| ⬜ | Image fill (pattern/photo as fill) | |
-| ⬜ | Blend modes | multiply, screen, overlay, etc. — big visual-style unlock |
-| ⬜ | Gaussian blur on a layer | |
-| ⬜ | Backdrop blur (blur what's behind) | Requires renderer support, not just a modifier |
-| ⬜ | Inner shadow | |
-| ⬜ | Per-corner radius | Different radius per corner |
-| ⬜ | Border dash / inset control | |
-| ❓ | Vibrancy / material styles | Which iOS material maps to Widgy's options is unclear |
+| ⬜ | Image / pattern fill | Image layers exist; images-as-fill do not |
+| ⬜ | Mask by another layer's alpha | Text knockouts; needs cycle detection + a second pass |
+| 🚫 | Backdrop blur of the wallpaper | Widget backgrounds can't be transparent on iOS 27; wallpaper-crop illusion is the only route |
 
 ## 4. Text
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Font size / weight / design (system fonts) | |
-| ✅ | Color (token or literal) | |
-| ✅ | Horizontal alignment | |
-| ✅ | Line limit | |
-| ✅ | Letter spacing (tracking) | |
-| ✅ | Text case transform | upper / lower |
-| ✅ | Auto-shrink to fit | Fixed 0.5 minimum scale, not user-configurable |
-| 🟡 | Custom font family | Model accepts a family name; no font import or picker UI |
-| ⬜ | Vertical alignment within the frame | |
+| ✅ | Size, weight, design, custom font import + picker | |
+| ✅ | Solid or gradient fill, alignment, line limit, tracking, case | |
+| 🟡 | Auto-shrink | Fixed 0.5 minimum scale, not user-configurable |
 | ⬜ | Line spacing | |
-| ⬜ | Gradient-filled text | |
+| ⬜ | Vertical alignment within the frame | |
 | ⬜ | Text stroke / outline | |
-| ⬜ | Per-text shadow controls | Inherits generic layer shadow only |
-| ⬜ | Truncation mode selection | head/middle/tail |
-| ⬜ | Number formatting UI | Expressions can do it; no inspector affordance |
-| ⬜ | Date format builder | `dateFormat()` exists; needs a token picker UI |
+| ⬜ | Truncation mode (head/middle/tail) | |
+| ⬜ | Number-format and date-format builders | Expressions do it; no inspector affordance |
 
-## 5. Data sources
+## 5. Data
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Date & time (components, 12/24h, names) | Recomputed per timeline entry — never stale |
-| ✅ | Battery (level, state, low-power) | Real device data |
-| ✅ | Astronomy (sunrise, sunset, day length, moon phase) | Computed, no network or permissions |
-| ✅ | Custom URL → JSON source | Engine complete (auth headers, size cap, path discovery) |
-| 🟡 | Weather | Sample payload; WeatherKit provider not wired |
-| 🟡 | Health (steps, energy, stand) | Sample payload; HealthKit provider not wired |
-| 🟡 | Calendar (next event, count) | Sample payload; EventKit provider not wired |
-| ⬜ | **Editor UI for custom URL sources** | Engine has no front door — highest-leverage gap |
-| ⬜ | Reminders | |
-| ⬜ | Now Playing (title, artist, artwork) | |
-| ⬜ | Storage (used / free / total) | |
-| ⬜ | Memory / RAM | |
+| ✅ | Time, battery, weather (unit-aware), health, calendar, reminders, focus, astronomy | Real providers with permission flows |
+| ✅ | Arbitrary user JSON APIs, with an editor UI | The thing Widgy never had |
+| ⬜ | Now Playing (title, artist, artwork) | Common in Widgy designs |
+| ⬜ | Storage / memory | |
 | ⬜ | Network (SSID, IP, connection type) | |
 | ⬜ | Location (city, coordinates, altitude) | |
-| ⬜ | Connected device batteries (Watch, AirPods) | Widgy favorite; API access is limited — research needed |
-| ⬜ | Countdown / countup to a date | Expressible today, but deserves a first-class source |
-| ⬜ | World clocks (multiple timezones) | |
-| ⬜ | Device info (name, model, OS version, uptime) | |
-| ⬜ | Stocks / RSS | Custom URL source may cover these |
+| ⬜ | Connected device batteries (Watch, AirPods) | API access is limited — research before promising |
+| ⬜ | World clocks | |
+| ⬜ | Device info (name, model, OS, uptime) | |
+| ⬜ | First-class countdown/timer source | Expressible today, but deserves a source |
+| 🚫 | Focus *name* | `INFocusStatus` exposes only `isFocused: Bool?` |
 
-## 6. Logic & expressions
+## 6. Logic
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Arithmetic, comparison, boolean, ternary | |
-| ✅ | String concatenation and functions | |
-| ✅ | Math / format / unit-conversion builtins | ~35 functions |
-| ✅ | `has()` for missing-data fallbacks | |
-| ✅ | Environment variables in expressions | `env.dark`, `env.rendition` |
-| ✅ | Inline validation on entry | Editor rejects unparseable input |
-| ⬜ | **Conditional layer visibility** | Show/hide by expression — Widgy leans on this heavily |
-| ⬜ | Conditional color / style by expression | e.g. red below 20% battery |
-| ⬜ | Expression autocomplete for available paths | Discovery exists in the data layer, unused by the UI |
-| ⬜ | Named user variables per document | Compute once, reuse across layers |
+| ✅ | Expression language with ~35 builtins, inline validation | |
+| ✅ | Conditional visibility (`visibleWhen`) | Fails open, so a broken condition never blanks a widget |
+| ✅ | Tap actions with expression-templated URLs | Deep links carrying live data |
+| ✅ | Simplified-detail hiding | Mirrors WidgetKit `LevelOfDetail` |
+| ⬜ | Conditional *styling* by expression | Colour that changes below 20% battery, without duplicate layers |
+| ⬜ | Named user variables per document | Compute once, reuse |
+| ⬜ | Expression autocomplete from discovered paths | Discovery exists in the data layer, unused by the UI |
 
-## 7. Surfaces & renditions
+## 7. Surfaces
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Home Screen small / medium / large | |
-| ✅ | Lock Screen circular / rectangular / inline | Monochrome resolution handled |
-| ✅ | Per-rendition overrides (sparse patches) | Edit once, tune per size |
-| ⬜ | iPad extra-large | |
+| ✅ | Home Screen small / medium / large / XL / XL-portrait | |
+| ✅ | Lock Screen circular / rectangular / inline | |
+| ✅ | Multiple widget instances, each bound to its own design | `AppIntentConfiguration` |
+| ⬜ | **Interactive buttons** (in-widget toggles/actions) | Tap actions are deep links today; App Intents in-widget is the real prize and structurally impossible for a raster-based competitor |
 | ⬜ | StandBy | |
-| ⬜ | Apple Watch complications | Widgy shipped these; real differentiator |
-| ⬜ | **Interactive buttons (App Intents)** | iOS 17+; Widgy's static-image model can't follow us here |
-| ⬜ | Per-layer tap targets / deep links | Turns one widget into a launcher |
-| ⬜ | Live Activities / Dynamic Island | Nothing comparable exists in this category |
+| ⬜ | Apple Watch complications | Widgy shipped these |
+| ⬜ | Live Activities / Dynamic Island | Nothing in this category does it |
+| ⬜ | Control Center widgets | Widgy 26.1.1 has them |
 
-## 8. Editor experience
+## 8. Editor
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
-| ✅ | Live canvas at true widget size | Same resolver as the shipping widget |
-| ✅ | Tap to select | |
-| ✅ | Drag to move, with snap guides | Snaps to 0/¼/½/¾/1 |
-| ✅ | 8-point resize handles | |
-| ✅ | Layer list (select, hide, reorder, duplicate, delete) | |
-| ✅ | Add-layer palette | All eight layer types |
-| ✅ | Per-type inspector | |
-| ✅ | Theme/token editor (light + dark) | |
-| ✅ | Undo | Coalesced; no redo yet |
-| ✅ | Light/dark and rendition preview switching | |
+| ✅ | Live canvas, resident inspector, wallpaper backdrop, home-screen preview | |
+| ✅ | Drag with snapping, 8-point resize, layer list, shape studio, asset/app pickers | |
+| ✅ | Theme tokens + scene palettes, AI generation from a prompt | |
+| ✅ | Undo | |
 | ⬜ | Redo | |
-| ⬜ | Canvas zoom / pan | Fixed 2× zoom today |
 | ⬜ | Copy / paste layers between documents | |
-| ⬜ | Group / ungroup selection | |
+| ⬜ | Group / ungroup a selection | |
 | ⬜ | Lock layer | |
+| ⬜ | Canvas zoom / pan | Fixed zoom |
 | ⬜ | Grid overlay / rulers | |
-| ⬜ | Wallpaper preview behind the canvas | Essential for transparency-style designs |
-| ⬜ | Reusable layer components / presets | |
-| ⬜ | Color palettes / eyedropper | |
+| ⬜ | Reusable components / presets | |
+| ⬜ | Eyedropper from the wallpaper | Palette sampling exists; a live picker doesn't |
 
-## 9. Documents, sharing, system
+## 9. Documents & distribution
 
-| Status | Feature | Note |
+| | Capability | Note |
 |---|---|---|
 | ✅ | Create / rename / duplicate / delete | |
-| ✅ | Export & import `.facet` files | |
-| ✅ | Choose which document the widget shows | |
-| ✅ | Snapshot cache + refresh planner (cadence classes) | Honest about iOS reload budgets |
-| ⬜ | iCloud sync | Spec'd, not built |
-| ⬜ | **Widgy JSON importer** | Migration path for a stranded user base — now urgent |
-| ⬜ | Community gallery (browse / install / remix) | |
-| ⬜ | Multiple widget instances with per-instance selection | Needs an App Intent configuration |
+| ✅ | `.facet` export + import | |
+| ✅ | Scene bundles — a whole home screen as one shareable file | Beyond anything Widgy could express |
+| ⬜ | **Widgy importer** | Their users are stranded *right now*; this is the migration wedge and it just became time-critical |
+| ⬜ | iCloud sync | Also the gating feature for any Mac editor |
+| ⬜ | Community gallery | Widgy 26.1.1 had one with search — their moat, now unmaintained |
 | ⬜ | Folders / organization | |
-| ⬜ | Backup & restore | |
+| ⬜ | Backup & restore | Scene bundles partially cover this |
 | ⬜ | Per-document refresh settings UI | |
 
 ---
 
-## Priority read
+## Unidentified Widgy controls
 
-Given Widgy's exit and the iOS 27 window, the ordering that matters:
+The point of this section is the thing that can't be answered from memory:
+Widgy exposed dozens of toggles with no documentation, no tooltips, and often
+no visible effect on the layer you were editing. Before deciding whether to
+implement any of them, they have to be *identified*.
 
-1. **Widgy JSON importer** — a stranded user base with libraries of designs
-   they can't take anywhere. Nothing else buys goodwill this cheaply.
-2. **Conditional visibility + conditional styling** — the single most-used
-   Widgy mechanic still missing; many designs are unbuildable without it.
-3. **Custom URL source editor UI** — the engine is done; this is front-door
-   work that unlocks the "any API" story Widgy never had.
-4. **Interactive buttons + tap targets** — where we pass Widgy rather than
-   catch it, and structurally out of reach for a raster-based competitor.
-5. **Blur / blend modes / masking** — the visual vocabulary gap; these three
-   account for most "why doesn't mine look like theirs" complaints.
-6. **Real providers** (WeatherKit, HealthKit, EventKit) — sample data can't
-   ship.
-7. **Wallpaper preview + image picker** — the transparency aesthetic.
+Candidate names to look for while testing (grouped by where they appear in
+Widgy's inspector) — confirm, screenshot, and annotate:
 
-## Verifying this list
+- **Sizing/layout:** "Fit", "Fill", "Aspect", "Anchor", "Relative", "Offset
+  unit" (points vs percent), constraint-style options
+- **Rendering:** "Render mode", "Tint mode", "Composite", "Cache", "Quality",
+  "Retina/scale", "Corner smoothing"
+- **Progress/gauge:** "Progress type", "Direction", "Cap", "Segments" (we
+  have equivalents — confirm the mapping is complete)
+- **Info fields:** the variant dropdowns on each data field, which appear to
+  change formatting rather than the value
+- **Global/document:** refresh options, "safe area", grid/snap values,
+  anything under advanced or debug sections
 
-Reconstructing from memory has limits. The cheapest high-fidelity source is
-the app bundle's own localization table: every editor control's label lives
-there, so it enumerates the feature surface without touching code.
+### Resolving them cheaply
 
-On a Mac with the Widgy app installed:
+The app bundle's localization table lists every control label, which
+enumerates the surface without touching code:
 
 ```sh
 ls /Applications/Widgy.app/Contents/Resources/*.lproj
 plutil -p /Applications/Widgy.app/Contents/Resources/en.lproj/Localizable.strings > ~/Desktop/widgy-strings.txt
 ```
 
-Drop that file into `docs/reference/` and this checklist can be reconciled
-against it — including the ❓ rows, where a label's neighbours usually reveal
-what a mystery toggle actually governs.
+Drop that in `docs/reference/` and this section can be reconciled against it —
+neighbouring labels usually reveal what a mystery toggle governs. If the
+strings are compiled into a `.strings` binary, `plutil -p` still prints them.
+
+## What actually matters next
+
+Ranked for the current moment, not for completeness:
+
+1. **Widgy importer** — a user base with libraries they can't take anywhere,
+   and no competing destination. Cheapest goodwill available.
+2. **Interactive buttons** — where Facet passes Widgy rather than catches it.
+3. **iCloud sync** — table stakes, and the prerequisite for a Mac editor.
+4. **Conditional styling + repeater layer** — the two remaining expressive
+   gaps that make some Widgy designs literally unbuildable here.
+5. **Now Playing / storage / network** — the data breadth people notice.
+6. **Community gallery** — their moat is unmaintained and inheritable.
